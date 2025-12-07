@@ -98,6 +98,9 @@ def run_left_off_service():
             logger.error("Failed to generate summary")
             return 1
         
+        # Override datetime_summary with current time (West Coast)
+        summary_result['datetime_summary'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
         # Save the JSON result to file
         summary_json_path = config.get_summary_json_path()
         try:
