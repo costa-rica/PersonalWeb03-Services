@@ -71,8 +71,12 @@ class Config:
 
     def get_left_off_file_path(self):
         """Get the full path for the LEFT-OFF.docx file."""
-        return self.services_data_dir / self.target_file_name
+        return self.services_data_dir / 'left-off-temp' / self.target_file_name
 
     def get_activities_file_path(self):
         """Get the full path for the last-7-days-activities.md file."""
-        return self.services_data_dir / 'last-7-days-activities.md'
+        return self.services_data_dir / 'left-off-temp' / 'last-7-days-activities.md'
+    
+    def get_summary_json_path(self):
+        """Get the full path for the summary JSON output file."""
+        return self.services_data_dir / 'left-off-7-day-summary.json'

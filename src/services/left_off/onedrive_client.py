@@ -59,7 +59,7 @@ class OneDriveClient:
                 # Check if new refresh token was issued
                 if 'refresh_token' in result and result['refresh_token'] != self.refresh_token:
                     logger.warning("New refresh token issued - update your .env file")
-                    logger.warning(f"REFRESH_TOKEN={result['refresh_token']}")
+                    # logger.warning(f"REFRESH_TOKEN={result['refresh_token']}")
 
                 self.access_token = result['access_token']
                 return self.access_token

@@ -95,6 +95,16 @@ def run_left_off_service():
             logger.error("Failed to generate summary")
             return 1
         
+        # Save the JSON result to file
+        summary_json_path = config.get_summary_json_path()
+        try:
+            with open(summary_json_path, 'w', encoding='utf-8') as f:
+                json.dump(summary_result, f, indent=2)
+            logger.info(f"Summary saved to: {summary_json_path}")
+        except Exception as e:
+            logger.error(f"Failed to save summary to file: {e}")
+            return 1
+        
         # Print the JSON result
         print("\n" + "="*80)
         print("SUMMARY RESULT:")
