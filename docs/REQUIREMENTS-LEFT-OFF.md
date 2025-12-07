@@ -31,7 +31,8 @@ This service will be a three step process:
 - This process `docs/reference-code/onedrive_client.py`
 - Uses Microsoft Graph API with MSAL (Microsoft Authentication Library)
 - Authenticates via refresh token to obtain access tokens
-- Downloads the target LEFT-OFF.docx file from OneDrive
+- Downloads the target LEFT-OFF.docx file from OneDrive to the PATH_PROJECT_RESOURCES folder's sub folder called services-data
+   - the file name is: `LEFT-OFF.docx`
 
 ### Step 2: Parse LEFT-OFF.docx file
 - This process: `docs/reference-code/document_parser.py`
