@@ -68,13 +68,13 @@ TOGGL_API_TOKEN=your_toggl_api_token
 ## Usage
 
 ```bash
-# Run individual services (anytime)
-python src/main.py --run-left-off
-python src/main.py --run-toggl
+# Run both services (default - respects time window)
+python src/main.py                    # Runs LEFT-OFF + Toggl during 23:00-23:10 window
+python src/main.py --run-anyway       # Runs LEFT-OFF + Toggl anytime (bypass guardrail)
 
-# Check time guardrail (scheduled execution)
-python src/main.py                    # Exits with code 2 if outside Sunday 10:55-11:05 PM window
-python src/main.py --run-anyway       # Bypass time restrictions
+# Run individual services (anytime - bypass guardrail)
+python src/main.py --run-left-off     # LEFT-OFF only
+python src/main.py --run-toggl        # Toggl only
 ```
 
 **Exit Codes**:
@@ -93,7 +93,8 @@ python src/main.py --run-anyway       # Bypass time restrictions
 
 ## Time-Based Guardrail
 
-Services are designed to run as Sunday evening cron jobs:
-- **Allowed Window**: Sunday 10:55 PM - 11:05 PM (local system time)
-- **Bypass**: Use `--run-anyway` flag for testing
-- Individual service flags (`--run-left-off`, `--run-toggl`) always bypass the guardrail
+Services run within a configurable daily time window for scheduled cron execution:
+- **Default Window**: 23:00 - 23:10 (11:00 PM - 11:10 PM) daily
+- **Configuration**: Set `TIME_WINDOW_START=HH:MM` in .env (e.g., `TIME_WINDOW_START=23:00`)
+- **Window Duration**: Always 10 minutes from start time
+- **Bypass**: Use `--run-anyway` flag or individual service flags for testing
