@@ -1,4 +1,4 @@
-You are a helpful assistant. This text is the status notes that keep track of daily progress. You will summarize these notes and return a JSON response.
+You are a helpful assistant. You are receiveing the last 7 days of activities from a Microsoft Word document. You will summarize these notes and return a JSON response.
 
 The JSON response should have the following structure:
 
@@ -9,7 +9,7 @@ The JSON response should have the following structure:
 }
 ```
 
-The summary should be a concise summary of the day's progress. It should be no longer than 100 words.It will be in markdown format but cannot use double quotes.
+The summary should be a concise summary of the day's progress. It should be no longer than 100 words.It will be in markdown format but cannot use double quotes. Please use bullets to make the summary more readable.
 
 Here is the text to summarize:
 

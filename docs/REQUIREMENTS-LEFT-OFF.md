@@ -51,4 +51,25 @@ This service will be a three step process:
 - returns a JSON response with the summary and the datetime the summary was generated
 
 
+## LEFT-OFF.docx file structure
 
+The LEFT-OFF.docx file follows this structure:
+- **Heading 1**: Date in YYYYMMDD format (e.g., 20231115)
+- **Heading 2**: Section headers like "LEFT-OFF" and "Accomplished Today"
+- **Organization**: Most recent entries at the top, oldest at the bottom
+
+The parser extracts all content from the beginning of the document until it finds the first Heading 1 date that is 8+ days old (the cutoff ensures 7 full days of content).
+
+## Error Handling
+
+The application uses Python's logging module throughout. All modules have their own logger instances. Common failure points:
+- Invalid/expired refresh tokens (OneDrive authentication)
+- Missing or incorrectly formatted document structure
+- Missing prompt.md file
+- OpenAI API errors (invalid key, rate limits, insufficient credits)
+
+### Exit Codes
+
+- **0**: Success - all operations completed successfully
+- **1**: Error - operational failure (auth error, file error, API error, etc.)
+- **2**: Time window restriction - execution attempted outside allowed Sunday 10:55 PM - 11:05 PM window
