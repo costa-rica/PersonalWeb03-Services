@@ -44,9 +44,8 @@ class Config:
         self.openai_base_url = os.getenv('URL_BASE_OPENAI', 'https://api.openai.com/v1')
         self.openai_api_key = os.getenv('KEY_OPENAI')
         
-        # Toggl config (for future use)
-        self.toggl_email = os.getenv('TOGGL_EMAIL')
-        self.toggl_password = os.getenv('TOGGL_PASSWORD')
+        # Toggl config
+        self.toggl_api_token = os.getenv('TOGGL_API_TOKEN')
 
     def validate_left_off_config(self):
         """
@@ -80,3 +79,24 @@ class Config:
     def get_summary_json_path(self):
         """Get the full path for the summary JSON output file."""
         return self.services_data_dir / 'left-off-7-day-summary.json'
+    
+    def validate_toggl_config(self):
+        """
+        Validate that all required config for Toggl service is present.
+        
+        Raises:
+            ValueError: If required configuration is missing
+        """
+        required = {
+            'TOGGL_API_TOKEN': self.toggl_api_token,
+        }
+        
+        missing = [key for key, value in required.items() if not value]
+        if missing:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+        
+        logger.info("Toggl configuration validated successfully")
+    
+    def get_toggl_csv_path(self):
+        """Get the full path for the Toggl CSV output file."""
+        return self.services_data_dir / 'project_time_entries.csv'

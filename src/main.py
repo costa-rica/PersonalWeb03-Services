@@ -10,6 +10,7 @@ import argparse
 import logging
 import json
 from pathlib import Path
+from datetime import datetime, timedelta
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -19,6 +20,8 @@ from utils.guardrail import TimeGuardrail
 from services.left_off.onedrive_client import OneDriveClient
 from services.left_off.document_parser import DocumentParser
 from services.left_off.summarizer import Summarizer
+from services.toggl.toggl_client import TogglClient
+from services.toggl.time_aggregator import TimeAggregator
 
 
 # Configure logging
@@ -123,6 +126,98 @@ def run_left_off_service():
         return 1
 
 
+def run_toggl_service():
+    """
+    Run the Toggl Tracker to CSV service.
+    
+    Returns:
+        int: Exit code (0=success, 1=error)
+    """
+    logger.info("Starting Toggl service")
+    
+    try:
+        # Load and validate configuration
+        config = Config()
+        config.validate_toggl_config()
+        
+        # Initialize Toggl client
+        client = TogglClient(api_token=config.toggl_api_token)
+        
+        # Step 1: Get workspaces
+        logger.info("Step 1: Fetching workspaces")
+        workspaces = client.get_workspaces()
+        if not workspaces:
+            logger.error("Failed to fetch workspaces")
+            return 1
+        
+        # Use first workspace
+        workspace_id = workspaces[0]['id']
+        logger.info(f"Using workspace: {workspaces[0]['name']}")
+        
+        # Step 2: Get projects
+        logger.info("Step 2: Fetching projects")
+        projects = client.get_projects(workspace_id)
+        if projects is None:
+            logger.error("Failed to fetch projects")
+            return 1
+        
+        # Step 3: Get time entries for last 7 days
+        logger.info("Step 3: Fetching time entries for last 7 days")
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
+        
+        time_entries = client.get_time_entries(start_date, end_date)
+        if time_entries is None:
+            logger.error("Failed to fetch time entries")
+            return 1
+        
+        # Step 4: Aggregate time by project
+        logger.info("Step 4: Aggregating time by project")
+        aggregator = TimeAggregator()
+        results = aggregator.aggregate_by_project(time_entries, projects)
+        
+        # Step 5: Print results
+        print("\n" + "="*80)
+        print("TOGGL TIME ENTRIES (Last 7 Days):")
+        print("="*80)
+        for item in results:
+            print(f"{item['project_name']}: {item['hours_worked']} hours")
+        print("="*80 + "\n")
+        
+        # Step 6: Write to CSV
+        logger.info("Step 5: Writing results to CSV")
+        csv_path = config.get_toggl_csv_path()
+        collection_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        try:
+            import csv
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=['project_name', 'hours_worked', 'datetime_collected'])
+                writer.writeheader()
+                
+                for item in results:
+                    writer.writerow({
+                        'project_name': item['project_name'],
+                        'hours_worked': item['hours_worked'],
+                        'datetime_collected': collection_time
+                    })
+            
+            logger.info(f"CSV saved to: {csv_path}")
+        except Exception as e:
+            logger.error(f"Failed to write CSV: {e}")
+            return 1
+        
+        logger.info("Toggl service completed successfully")
+        return 0
+        
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        return 1
+
+
 def main():
     """Main entry point for the application."""
     parser = argparse.ArgumentParser(
@@ -138,7 +233,7 @@ def main():
     parser.add_argument(
         '--run-toggl',
         action='store_true',
-        help='Run the Toggl Tracker to CSV service (not yet implemented)'
+        help='Run the Toggl Tracker to CSV service'
     )
     
     parser.add_argument(
@@ -166,8 +261,8 @@ def main():
         exit_code = run_left_off_service()
         sys.exit(exit_code)
     elif args.run_toggl:
-        logger.error("Toggl service not yet implemented")
-        sys.exit(1)
+        exit_code = run_toggl_service()
+        sys.exit(exit_code)
 
 
 if __name__ == '__main__':
