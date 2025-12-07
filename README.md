@@ -18,10 +18,12 @@ The guardrail will check for the time and will prevent the execution of the serv
 ### 1. LEFT-OFF.docx download and summary
 This service will download the LEFT-OFF.docx file from the MS Graph API and then summarize it using the OpenAI API.
 - this specific function should be able to run at any time with the command `python src/main.py --run-left-off`
+- see the `docs/REQUIREMENTS-LEFT-OFF.md` file for more details
 
 ### 2. Toggl Tracker to CSV
 This service will download the Toggl Tracker data from the Toggl API and then convert it to a CSV file.
 - this specific function should be able to run at any time with the command `python src/main.py --run-toggl`
+- see the `docs/REQUIREMENTS-TOGGL.md` file for more details
 
 
 
