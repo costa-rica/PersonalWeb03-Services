@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.config import Config
+from utils.guardrail import TimeGuardrail
 from services.left_off.onedrive_client import OneDriveClient
 from services.left_off.document_parser import DocumentParser
 from services.left_off.summarizer import Summarizer
@@ -130,18 +131,33 @@ def main():
         help='Run the Toggl Tracker to CSV service (not yet implemented)'
     )
     
+    parser.add_argument(
+        '--run-anyway',
+        action='store_true',
+        help='Bypass time window restrictions and run services at any time'
+    )
+    
     args = parser.parse_args()
     
-    # Run the requested service
+    # If no service flag is specified, check time guardrail
+    if not args.run_left_off and not args.run_toggl:
+        logger.info("No service specified - checking time window guardrail")
+        exit_code = TimeGuardrail.enforce(bypass=args.run_anyway)
+        if exit_code != 0:
+            sys.exit(exit_code)
+        
+        # If we get here, we're in the allowed window but no service was specified
+        logger.info("Time window check passed, but no service was specified")
+        parser.print_help()
+        sys.exit(0)
+    
+    # Run the requested service (individual service flags can run anytime)
     if args.run_left_off:
         exit_code = run_left_off_service()
         sys.exit(exit_code)
     elif args.run_toggl:
         logger.error("Toggl service not yet implemented")
         sys.exit(1)
-    else:
-        parser.print_help()
-        sys.exit(0)
 
 
 if __name__ == '__main__':
