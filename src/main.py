@@ -227,13 +227,13 @@ def main():
     parser.add_argument(
         '--run-left-off',
         action='store_true',
-        help='Run the LEFT-OFF.docx download and summary service'
+        help='Run only the LEFT-OFF.docx download and summary service'
     )
     
     parser.add_argument(
         '--run-toggl',
         action='store_true',
-        help='Run the Toggl Tracker to CSV service'
+        help='Run only the Toggl Tracker to CSV service'
     )
     
     parser.add_argument(
@@ -244,26 +244,35 @@ def main():
     
     args = parser.parse_args()
     
-    # If no service flag is specified, check time guardrail
-    if not args.run_left_off and not args.run_toggl:
-        logger.info("No service specified - checking time window guardrail")
-        config = Config()
-        exit_code = TimeGuardrail.enforce(bypass=args.run_anyway, start_time_str=config.time_window_start)
-        if exit_code != 0:
-            sys.exit(exit_code)
-        
-        # If we get here, we're in the allowed window but no service was specified
-        logger.info("Time window check passed, but no service was specified")
-        parser.print_help()
-        sys.exit(0)
-    
-    # Run the requested service (individual service flags can run anytime)
+    # Run individual services (bypass guardrail)
     if args.run_left_off:
         exit_code = run_left_off_service()
         sys.exit(exit_code)
     elif args.run_toggl:
         exit_code = run_toggl_service()
         sys.exit(exit_code)
+    
+    # No individual service flag - run both services with guardrail check
+    logger.info("Running both services")
+    
+    # Check time guardrail unless --run-anyway is specified
+    config = Config()
+    exit_code = TimeGuardrail.enforce(bypass=args.run_anyway, start_time_str=config.time_window_start)
+    if exit_code != 0:
+        sys.exit(exit_code)
+    
+    # Run both services
+    logger.info("Time window check passed - executing both services")
+    
+    # Run LEFT-OFF service
+    exit_code = run_left_off_service()
+    if exit_code != 0:
+        logger.error("LEFT-OFF service failed, skipping Toggl service")
+        sys.exit(exit_code)
+    
+    # Run Toggl service
+    exit_code = run_toggl_service()
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':

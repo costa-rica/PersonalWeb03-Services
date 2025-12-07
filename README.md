@@ -2,7 +2,7 @@
 
 # PersonalWeb03-Services
 
-Automated services for PersonalWeb03 that run as scheduled cron jobs on Sunday evenings. Downloads and processes data from OneDrive and Toggl Track APIs.
+Automated services for PersonalWeb03 that run as scheduled cron jobs. Downloads and processes data from OneDrive and Toggl Track APIs.
 
 ## Outputs
 
