@@ -46,6 +46,9 @@ class Config:
         
         # Toggl config
         self.toggl_api_token = os.getenv('TOGGL_API_TOKEN')
+        
+        # Time guardrail config
+        self.time_window_start = os.getenv('TIME_WINDOW_START', '23:00')
 
     def validate_left_off_config(self):
         """

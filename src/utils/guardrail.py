@@ -12,59 +12,106 @@ logger = logging.getLogger(__name__)
 class TimeGuardrail:
     """Enforces time-based execution windows for services."""
     
-    # Allowed execution window
-    ALLOWED_DAY = 6  # Sunday (0=Monday, 6=Sunday)
-    ALLOWED_HOUR = 23  # 11 PM
-    ALLOWED_MINUTE_START = 55  # 10:55 PM
-    ALLOWED_MINUTE_END = 5  # 11:05 PM (5 minutes after)
+    # Default window settings if not configured
+    DEFAULT_START_TIME = "23:00"  # 11:00 PM
+    WINDOW_DURATION_MINUTES = 10  # 10 minute window
     
     @classmethod
-    def check_time_window(cls):
+    def parse_time_window(cls, start_time_str):
+        """
+        Parse start time string and calculate end time.
+        
+        Args:
+            start_time_str: Time in HH:MM format (24-hour)
+            
+        Returns:
+            tuple: (start_hour, start_minute, end_hour, end_minute)
+        """
+        try:
+            hour, minute = map(int, start_time_str.split(':'))
+            
+            # Validate hour and minute
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError("Invalid time format")
+            
+            # Calculate end time (add 10 minutes)
+            end_minute = minute + cls.WINDOW_DURATION_MINUTES
+            end_hour = hour
+            
+            # Handle minute overflow
+            if end_minute >= 60:
+                end_minute -= 60
+                end_hour += 1
+                
+            # Handle hour overflow (crosses midnight)
+            if end_hour >= 24:
+                end_hour -= 24
+            
+            return hour, minute, end_hour, end_minute
+            
+        except (ValueError, AttributeError):
+            logger.error(f"Invalid TIME_WINDOW_START format: {start_time_str}. Use HH:MM format (e.g., '23:00')")
+            return None
+    
+    @classmethod
+    def check_time_window(cls, start_time_str=None):
         """
         Check if current time is within the allowed execution window.
+        
+        Args:
+            start_time_str: Optional start time override (HH:MM format)
         
         Returns:
             bool: True if within allowed window, False otherwise
         """
-        now = datetime.now()
+        if start_time_str is None:
+            start_time_str = cls.DEFAULT_START_TIME
         
-        # Check if it's Sunday
-        if now.weekday() != cls.ALLOWED_DAY:
-            logger.warning(
-                f"Execution blocked: Current day is {now.strftime('%A')}. "
-                f"Services can only run on Sunday."
-            )
-            logger.warning(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-            logger.warning("Allowed window: Sunday 10:55 PM - 11:05 PM")
+        # Parse time window
+        parsed = cls.parse_time_window(start_time_str)
+        if parsed is None:
             return False
         
-        # Check if it's within the time window (10:55 PM - 11:05 PM)
+        start_hour, start_minute, end_hour, end_minute = parsed
+        
+        now = datetime.now()
         current_hour = now.hour
         current_minute = now.minute
         
-        # Check if we're in the 11 PM hour
-        if current_hour == cls.ALLOWED_HOUR:
-            # Between 10:55 PM and 11:05 PM
-            if cls.ALLOWED_MINUTE_START <= current_minute <= 59 or current_minute <= cls.ALLOWED_MINUTE_END:
-                logger.info("Time window check passed")
-                return True
+        # Check if current time is within window
+        # Convert times to minutes since midnight for easier comparison
+        current_total_minutes = current_hour * 60 + current_minute
+        start_total_minutes = start_hour * 60 + start_minute
+        end_total_minutes = end_hour * 60 + end_minute
         
-        # Outside allowed window
-        logger.warning(
-            f"Execution blocked: Current time is {now.strftime('%H:%M:%S')}. "
-            f"Services can only run between 10:55 PM and 11:05 PM on Sunday."
-        )
-        logger.warning(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.warning("Allowed window: Sunday 10:55 PM - 11:05 PM")
-        return False
+        # Handle case where window crosses midnight
+        if end_total_minutes < start_total_minutes:
+            # Window crosses midnight (e.g., 23:55 - 00:05)
+            in_window = current_total_minutes >= start_total_minutes or current_total_minutes <= end_total_minutes
+        else:
+            # Normal case
+            in_window = start_total_minutes <= current_total_minutes <= end_total_minutes
+        
+        if in_window:
+            logger.info("Time window check passed")
+            return True
+        else:
+            logger.warning(
+                f"Execution blocked: Current time is {now.strftime('%H:%M:%S')}. "
+                f"Services can only run between {start_hour:02d}:{start_minute:02d} and {end_hour:02d}:{end_minute:02d}."
+            )
+            logger.warning(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.warning(f"Allowed window: {start_hour:02d}:{start_minute:02d} - {end_hour:02d}:{end_minute:02d} (daily)")
+            return False
     
     @classmethod
-    def enforce(cls, bypass=False):
+    def enforce(cls, bypass=False, start_time_str=None):
         """
         Enforce the time guardrail.
         
         Args:
             bypass: If True, bypass the time check
+            start_time_str: Optional start time override (HH:MM format)
             
         Returns:
             int: 0 if allowed to proceed, 2 if blocked by time restriction
@@ -73,7 +120,7 @@ class TimeGuardrail:
             logger.info("Time guardrail bypassed with --run-anyway flag")
             return 0
         
-        if not cls.check_time_window():
+        if not cls.check_time_window(start_time_str):
             logger.error("Exiting due to time window restriction (exit code 2)")
             logger.info("Use --run-anyway flag to bypass time restrictions")
             return 2

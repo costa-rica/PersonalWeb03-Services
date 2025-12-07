@@ -247,7 +247,8 @@ def main():
     # If no service flag is specified, check time guardrail
     if not args.run_left_off and not args.run_toggl:
         logger.info("No service specified - checking time window guardrail")
-        exit_code = TimeGuardrail.enforce(bypass=args.run_anyway)
+        config = Config()
+        exit_code = TimeGuardrail.enforce(bypass=args.run_anyway, start_time_str=config.time_window_start)
         if exit_code != 0:
             sys.exit(exit_code)
         

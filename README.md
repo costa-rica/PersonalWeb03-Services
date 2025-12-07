@@ -1,29 +1,99 @@
+![PersonalWeb03 Logo](docs/assets/personalWeb03Logo.png)
+
 # PersonalWeb03-Services
 
-This repository contains the services for the PersonalWeb03 project. The goal of this project is to combine services that have needed for the PersonalWeb03 project into a single repository. These services are currently in separate repositories and the `docs/reference-code` folder will have some example code that should be used as a reference to build this project.
+Automated services for PersonalWeb03 that run as scheduled cron jobs on Sunday evenings. Downloads and processes data from OneDrive and Toggl Track APIs.
 
-## Build requirements
-This project will be a Python project that stores the codebase in the src/ folder. In production this will run on a a server that will run the services as a cron job. We want to set up the project so that by default `python src/main.py` will pass through a guardrail that will check for the time. 
+## Outputs
 
+### LEFT-OFF Service
 
-### Guardrail specifications
+**File**: `services-data/left-off-7-day-summary.json`
 
-The guardrail will check for the time and will prevent the execution of the service outside of the allowed window. The allowed window is defined as:
-- **Allowed window**: Sunday 10:55 PM - 11:05 PM (local system time)
-- **Buffer**: 5 minutes before and after 11:00 PM for clock synchronization tolerance
-- **Exit behavior**: If run outside this window without the `--run-anyway` flag, the service logs a warning and exits with code 2
-- **Bypass**: Use `--run-anyway` flag to run the service at any time for testing or manual execution
+Generates AI-powered summaries of the last 7 days of activities from LEFT-OFF.docx.
 
-## Services
-### 1. LEFT-OFF.docx download and summary
-This service will download the LEFT-OFF.docx file from the MS Graph API and then summarize it using the OpenAI API.
-- this specific function should be able to run at any time with the command `python src/main.py --run-left-off`
-- see the `docs/REQUIREMENTS-LEFT-OFF.md` file for more details
+```json
+{
+  "summary": "- Continued work on CadmusAI, focusing on IP address rate limiting.\n- Presented at the MLH / DigitalOcean Hackathon, deployed live demo.\n- Made UI fixes and architectural changes to PersonalWeb03.\n- Restored old blog entries and added admin features.",
+  "datetime_summary": "2025-12-07 12:00:00"
+}
+```
 
-### 2. Toggl Tracker to CSV
-This service will download the Toggl Tracker data from the Toggl API and then convert it to a CSV file.
-- this specific function should be able to run at any time with the command `python src/main.py --run-toggl`
-- see the `docs/REQUIREMENTS-TOGGL.md` file for more details
+**Temp Files**: `services-data/left-off-temp/`
+- `LEFT-OFF.docx` - Downloaded document from OneDrive
+- `last-7-days-activities.md` - Extracted activities in markdown
 
+---
 
+### Toggl Service
 
+**File**: `services-data/project_time_entries.csv`
+
+Tracks time worked on each project over the last 7 days.
+
+```csv
+project_name,hours_worked,datetime_collected
+Sharpening the Saw,31.68,2025-12-07 12:18:50
+Networking - DataKind,10.49,2025-12-07 12:18:50
+Search for work,3.21,2025-12-07 12:18:50
+```
+
+---
+
+## Installation
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+```
+
+**Environment Variables**: Add to `.env`
+```bash
+# Shared
+PATH_PROJECT_RESOURCES=/path/to/project/resources
+
+# LEFT-OFF Service
+TARGET_FILE_ID=your_onedrive_file_id
+APPLICATION_ID=your_azure_app_id
+CLIENT_SECRET=your_azure_client_secret
+REFRESH_TOKEN=your_refresh_token
+KEY_OPENAI=your_openai_api_key
+
+# Toggl Service
+TOGGL_API_TOKEN=your_toggl_api_token
+```
+
+---
+
+## Usage
+
+```bash
+# Run individual services (anytime)
+python src/main.py --run-left-off
+python src/main.py --run-toggl
+
+# Check time guardrail (scheduled execution)
+python src/main.py                    # Exits with code 2 if outside Sunday 10:55-11:05 PM window
+python src/main.py --run-anyway       # Bypass time restrictions
+```
+
+**Exit Codes**:
+- `0` - Success
+- `1` - Error (auth, API, file issues)
+- `2` - Time restriction (outside allowed window)
+
+---
+
+## Documentation
+
+- **[DEVELOPMENT_NOTES.md](docs/DEVELOPMENT_NOTES.md)** - Complete engineering reference with API details, architecture, and troubleshooting
+- **requirements/** - Original specifications used for initial development (historical reference)
+
+---
+
+## Time-Based Guardrail
+
+Services are designed to run as Sunday evening cron jobs:
+- **Allowed Window**: Sunday 10:55 PM - 11:05 PM (local system time)
+- **Bypass**: Use `--run-anyway` flag for testing
+- Individual service flags (`--run-left-off`, `--run-toggl`) always bypass the guardrail
