@@ -166,7 +166,8 @@ def run_toggl_service():
         
         # Step 3: Get time entries for last 7 days
         logger.info("Step 3: Fetching time entries for last 7 days")
-        end_date = datetime.now()
+        # end_date is exclusive in Toggl API, so we add 1 day to include today
+        end_date = datetime.now() + timedelta(days=1)
         start_date = end_date - timedelta(days=7)
         
         time_entries = client.get_time_entries(start_date, end_date)
