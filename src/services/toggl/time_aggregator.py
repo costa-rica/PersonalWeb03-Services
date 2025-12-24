@@ -2,11 +2,8 @@
 Time aggregator for summing hours by project.
 """
 
-import logging
 from collections import defaultdict
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class TimeAggregator:

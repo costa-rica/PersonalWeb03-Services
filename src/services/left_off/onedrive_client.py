@@ -3,12 +3,9 @@ OneDrive client for downloading files using Microsoft Graph API.
 """
 
 import os
-import logging
 import requests
 from msal import ConfidentialClientApplication
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class OneDriveClient:

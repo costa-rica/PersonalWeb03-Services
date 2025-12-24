@@ -2,14 +2,11 @@
 AI-powered summarizer for LEFT-OFF activities using OpenAI API.
 """
 
-import logging
 import json
 from datetime import datetime
 from pathlib import Path
 from openai import OpenAI
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class Summarizer:

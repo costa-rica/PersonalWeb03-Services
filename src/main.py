@@ -7,31 +7,23 @@ Services can be run individually using command-line flags.
 
 import sys
 import argparse
-import logging
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from loguru import logger
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.config import Config
 from utils.guardrail import TimeGuardrail
+from utils.logging_config import configure_logging
 from services.left_off.onedrive_client import OneDriveClient
 from services.left_off.document_parser import DocumentParser
 from services.left_off.summarizer import Summarizer
 from services.toggl.toggl_client import TogglClient
 from services.toggl.time_aggregator import TimeAggregator
-
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-logger = logging.getLogger(__name__)
 
 
 def run_left_off_service():
@@ -224,6 +216,12 @@ def run_toggl_service():
 
 def main():
     """Main entry point for the application."""
+    # Load environment variables from .env file
+    load_dotenv()
+
+    # Configure logging
+    configure_logging()
+
     parser = argparse.ArgumentParser(
         description='PersonalWeb03-Services - Run various services for PersonalWeb03'
     )

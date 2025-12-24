@@ -2,13 +2,10 @@
 Document parser for extracting content from LEFT-OFF.docx file.
 """
 
-import logging
 import re
 from datetime import datetime, timedelta
 from docx import Document
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class DocumentParser:

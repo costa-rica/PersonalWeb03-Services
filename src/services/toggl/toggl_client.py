@@ -2,13 +2,10 @@
 Toggl Track API client.
 """
 
-import logging
 import requests
 from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class TogglClient:

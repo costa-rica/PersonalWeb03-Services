@@ -3,12 +3,9 @@ Configuration management for PersonalWeb03-Services.
 """
 
 import os
-import logging
 from pathlib import Path
 from dotenv import load_dotenv
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class Config:

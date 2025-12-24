@@ -2,11 +2,8 @@
 Time-based guardrail for controlling service execution.
 """
 
-import logging
 from datetime import datetime
-
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class TimeGuardrail:
